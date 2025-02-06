@@ -19,6 +19,8 @@ if __name__ == '__main__':
     dataset_utils.add_args(parser)
     parser.add_argument('--rank', type=int, default=0)
     parser.add_argument('--world_size', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=1024)
+    parser.add_argument('--skip', type=int, default=0)
     opt = parser.parse_args(sys.argv[2:])
     opt = edict(vars(opt))
 
@@ -43,6 +45,10 @@ if __name__ == '__main__':
 
     start = len(metadata) * opt.rank // opt.world_size
     end = len(metadata) * (opt.rank + 1) // opt.world_size
+    metadata = metadata[start:end]
+
+    start = opt.skip * opt.batch_size
+    end = (opt.skip + 1) * opt.batch_size
     metadata = metadata[start:end]
                 
     print(f'Processing {len(metadata)} objects...')
