@@ -47,8 +47,8 @@ if __name__ == '__main__':
     end = len(metadata) * (opt.rank + 1) // opt.world_size
     metadata = metadata[start:end]
 
-    start = opt.skip * opt.batch_size
-    end = (opt.skip + 1) * opt.batch_size
+    start = opt.skip
+    end = opt.skip + opt.batch_size
     metadata = metadata[start:end]
                 
     print(f'Processing {len(metadata)} objects...')
