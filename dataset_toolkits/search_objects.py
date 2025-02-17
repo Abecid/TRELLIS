@@ -1,5 +1,7 @@
 import csv
 
+dataset_root = '/home/alee00/datasets/trellis/ObjaverseXL_sketchfab'
+
 def load_data(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         return list(csv.DictReader(f))
@@ -21,8 +23,8 @@ def search_objects(preprocessed_data, keyword):
     return matching_rows
 
 if __name__ == "__main__":
-    metadata_file_path = 'datasets/ObjaverseXL_sketchfab/metadata.csv'
-    downloaded_file_path = 'datasets/ObjaverseXL_sketchfab/downloaded_0.csv'
+    metadata_file_path = f'{dataset_root}/metadata.csv'
+    downloaded_file_path = f'{dataset_root}/downloaded_0.csv'
     
     downloaded_sha256 = load_downloaded_sha256(downloaded_file_path)  # Load only downloaded objects
     data = load_data(metadata_file_path)  # Load metadata

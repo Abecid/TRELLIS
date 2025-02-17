@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+<body>
+    <h2>Search Results</h2>
+
+    {% if asset_paths %}
+        {% for path in asset_paths %}
+            <h3>Model:</h3>
+            <model-viewer src="{{ path }}" alt="3D Model" auto-rotate camera-controls ar></model-viewer>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No models found.</p>
+    {% endif %}
+
+    <a href="/">Back to search</a>
+</body>
+</html>
