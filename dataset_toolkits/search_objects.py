@@ -14,12 +14,13 @@ def load_downloaded_sha256(downloaded_file_path):
 def preprocess_data(data, downloaded_sha256):
     return [(row['captions'].lower() if row['captions'] else '', row) for row in data if row['sha256'] in downloaded_sha256]
 
-def search_objects(preprocessed_data, keyword):
+def search_objects(preprocessed_data, keyword, print_rows=100, substring_length=30):
     keyword = keyword.lower()
     matching_rows = [row for captions, row in preprocessed_data if keyword in captions]
     print(f"Found {len(matching_rows)} matching rows for keyword '{keyword}'.")
-    for row in matching_rows:
-        print(row)
+    for row in matching_rows[:print_rows]:
+        index = row['captions'].lower().index(keyword)
+        print(row['sha256'], row['captions'][index-substring_length:index+substring_length])
     return matching_rows
 
 if __name__ == "__main__":
@@ -35,4 +36,4 @@ if __name__ == "__main__":
         if keyword.lower() == 'exit':
             print("Exiting...")
             break
-        search_objects(preprocessed_data, keyword)
+        search_objects(preprocessed_data, keyword,)
