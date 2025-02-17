@@ -4,20 +4,118 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <!-- <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script> -->
+    <style>
+        model-viewer {
+            width: 50vw; /* Half the viewport width */
+            height: 50vh; /* Adjust height proportionally */
+            display: block;
+            margin: 0 auto; /* Center the model horizontally */
+        }
+        canvas {
+            width: 50vw;
+            height: 50vh;
+            display: block;
+            margin: auto;
+        }
+    </style>
 </head>
 <body>
     <h2>Search Results</h2>
 
-    {% if asset_paths %}
-        {% for path in asset_paths %}
-            <h3>Model:</h3>
-            <model-viewer src="{{ path }}" alt="3D Model" auto-rotate camera-controls ar></model-viewer>
-            <hr>
-        {% endfor %}
-    {% else %}
-        <p>No models found.</p>
-    {% endif %}
+    <div id="results-container">
+        {% if models %}
+            <h2>Total: {{total}}</h2>
+            {% for model in models %}
+                <h2>{{ loop.index }}.</h2>
+                <p>Caption: {{ model.caption }}</p>
+                <p>Path: {{ model.path }}</p>
+                
+                <!-- <model-viewer src="{{ model.path }}" alt="3D Model" auto-rotate camera-controls ar></model-viewer> -->
+
+                <canvas id="viewer{{ loop.index }}"></canvas>
+
+                <script>
+                    (function() {
+                        const canvas = document.getElementById("viewer{{ loop.index }}");
+                        const engine = new BABYLON.Engine(canvas, true);
+                        const scene = new BABYLON.Scene(engine);
+
+                        const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
+                        camera.attachControl(canvas, true);
+                        camera.wheelPrecision = 5; // Make zoom smoother
+                        camera.lowerRadiusLimit = 0.2; // Allow zooming inside the model
+
+                        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+                        BABYLON.SceneLoader.ImportMesh("", "", "{{ model.path }}", scene, function(meshes) {
+                            scene.createDefaultCameraOrLight(true, true, true);
+                        });
+
+                        engine.runRenderLoop(function() {
+                            scene.render();
+                        });
+
+                        window.addEventListener("resize", function() {
+                            engine.resize();
+                        });
+                    })();
+                </script>
+
+                <hr>
+            {% endfor %}
+        {% else %}
+            <p>No models found.</p>
+        {% endif %}
+    </div>
+
+    <div id="loading" style="text-align: center; display: none;">Loading more models...</div>
+
+    <script>
+        let offset = {{models|length}};  // Start after the first batch
+        let totalResults = {{total}};  // Total number of results
+        let keyword = "{{ keyword }}";
+        let loading = false;
+
+        async function loadMore() {
+            if (loading || offset >= totalResults) return; // Stop if already loading or no more results
+            loading = true;
+            document.getElementById("loading").style.display = "block";
+
+            const response = await fetch(`/load_more?keyword=${keyword}&offset=${offset}`);
+            const data = await response.json();
+            
+            let container = document.getElementById("results-container");
+
+            data.forEach((model, index) => {
+                let entry = document.createElement("div");
+                entry.classList.add("model-entry");
+
+                let modelIndex = offset + index + 1;  // Proper numbering
+                entry.innerHTML = `
+                    <h2>${modelIndex}.</h2>
+                    <h3>Caption: ${model.caption}</h3>
+                    <p>Path: ${model.path}</p>
+                    <model-viewer src="${model.path}" alt="3D Model" auto-rotate camera-controls ar></model-viewer>
+                    <hr>
+                `;
+
+                container.appendChild(entry);
+            });
+
+            offset += data.length;
+            loading = false;
+            document.getElementById("loading").style.display = "none";
+        }
+
+        window.addEventListener("scroll", () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+                loadMore();
+            }
+        });
+    </script>
 
     <a href="/">Back to search</a>
 </body>
