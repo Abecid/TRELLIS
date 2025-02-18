@@ -20,51 +20,64 @@
             display: block;
             margin: auto;
         }
+        #save-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h2>Search Results</h2>
 
+    <button id="save-btn">Save Selected Models (0)</button>
+
     <div id="results-container">
         {% if models %}
             <h2>Total: {{total}}</h2>
             {% for model in models %}
-                <h2>{{ loop.index }}.</h2>
-                <p>Caption: {{ model.caption }}</p>
-                <p>Path: {{ model.path }}</p>
-                
-                <!-- <model-viewer src="{{ model.path }}" alt="3D Model" auto-rotate camera-controls ar></model-viewer> -->
+                <div class="model-entry">
+                    <h2>{{ loop.index }}.</h2>
+                    <p>Caption: {{ model.caption }}</p>
+                    <p>Path: {{ model.path }}</p>
+                    
+                    <input type="checkbox" class="model-checkbox" data-path="{{ model.path }}" 
+                           data-caption="{{ model.caption }}" data-sha256="{{ model.sha256 }}"
+                           >
 
-                <canvas id="viewer{{ loop.index }}"></canvas>
+                    <canvas id="viewer{{ loop.index }}"></canvas>
 
-                <script>
-                    (function() {
-                        const canvas = document.getElementById("viewer{{ loop.index }}");
-                        const engine = new BABYLON.Engine(canvas, true);
-                        const scene = new BABYLON.Scene(engine);
+                    <script>
+                        (function() {
+                            const canvas = document.getElementById("viewer{{ loop.index }}");
+                            const engine = new BABYLON.Engine(canvas, true);
+                            const scene = new BABYLON.Scene(engine);
 
-                        const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
-                        camera.attachControl(canvas, true);
-                        camera.wheelPrecision = 5; // Make zoom smoother
-                        camera.lowerRadiusLimit = 0.2; // Allow zooming inside the model
+                            const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
+                            camera.attachControl(canvas, true);
+                            camera.wheelPrecision = 5; // Make zoom smoother
+                            camera.lowerRadiusLimit = 0.2; // Allow zooming inside the model
 
-                        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+                            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-                        BABYLON.SceneLoader.ImportMesh("", "", "{{ model.path }}", scene, function(meshes) {
-                            scene.createDefaultCameraOrLight(true, true, true);
-                        });
+                            BABYLON.SceneLoader.ImportMesh("", "", "{{ model.path }}", scene, function(meshes) {
+                                scene.createDefaultCameraOrLight(true, true, true);
+                            });
 
-                        engine.runRenderLoop(function() {
-                            scene.render();
-                        });
+                            engine.runRenderLoop(function() {
+                                scene.render();
+                            });
 
-                        window.addEventListener("resize", function() {
-                            engine.resize();
-                        });
-                    })();
-                </script>
+                            window.addEventListener("resize", function() {
+                                engine.resize();
+                            });
+                        })();
+                    </script>
 
-                <hr>
+                    <hr>
+                </div>
             {% endfor %}
         {% else %}
             <p>No models found.</p>
@@ -74,6 +87,38 @@
     <div id="loading" style="text-align: center; display: none;">Loading more models...</div>
 
     <script>
+        let selectedModels = [];
+
+        document.querySelectorAll('.model-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    selectedModels.push({ 
+                        path: this.dataset.path, 
+                        caption: this.dataset.caption, 
+                        sha256: this.dataset.sha256 
+                    });
+                } else {
+                    selectedModels = selectedModels.filter(model => model.path !== this.dataset.path);
+                }
+                document.getElementById("save-btn").innerText = `Save Selected Models (${selectedModels.length})`;
+            });
+        });
+
+        document.getElementById("save-btn").addEventListener("click", async () => {
+            if (selectedModels.length === 0) {
+                alert("No models selected!");
+                return;
+            }
+            let keyword = "{{ keyword }}";
+            const response = await fetch("/save_models", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ keyword: keyword, models: selectedModels })
+            });
+            const result = await response.json();
+            alert(result.message);
+        });
+
         let offset = {{models|length}};  // Start after the first batch
         let totalResults = {{total}};  // Total number of results
         let keyword = "{{ keyword }}";
@@ -96,8 +141,9 @@
                 let modelIndex = offset + index + 1;  // Proper numbering
                 entry.innerHTML = `
                     <h2>${modelIndex}.</h2>
-                    <h3>Caption: ${model.caption}</h3>
+                    <p>Caption: ${model.caption}</p>
                     <p>Path: ${model.path}</p>
+                    <input type="checkbox" class="model-checkbox" data-path="${model.path}" data-caption="${model.caption}" data-sha256="${model.sha256}">
                     <model-viewer src="${model.path}" alt="3D Model" auto-rotate camera-controls ar></model-viewer>
                     <hr>
                 `;

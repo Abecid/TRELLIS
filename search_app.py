@@ -1,6 +1,10 @@
+import os
+import re
+import json
+import shutil
+
 from flask import Flask, request, render_template, send_from_directory, jsonify
 import pandas as pd
-import re
 
 app = Flask(__name__)
 top_n = 10
@@ -9,6 +13,7 @@ top_n = 10
 DATASET_ROOT = "/home/alee00/datasets/trellis/ObjaverseXL_sketchfab"
 METADATA_FILE = f"{DATASET_ROOT}/metadata.csv"
 DOWNLOADED_FILE = f"{DATASET_ROOT}/downloaded_0.csv"
+OUTPUT_DIR = "./output"
 
 # Load metadata and downloaded file paths
 metadata_df = pd.read_csv(METADATA_FILE)
@@ -44,15 +49,11 @@ def search():
         if results.empty:
             return render_template("results.html", asset_paths=[])
 
-        # Generate full asset paths for rendering
-        # asset_paths = [os.path.join(DATASET_ROOT, path) for path in results["local_path"].dropna()][:top_n]
-
-        asset_paths = [f"/serve_model/{path}" for path in results["local_path"].dropna()][:top_n]
-
         models = [
             {
                 "path": f"/serve_model/{row['local_path']}", 
-                "caption": row["captions"]
+                "caption": row["captions"],
+                "sha256": row["sha256"]
             }
             for _, row in results.iterrows() if pd.notna(row["local_path"])
         ]
@@ -77,6 +78,41 @@ def load_more():
     more_models = models[offset:offset + top_n]
 
     return jsonify(more_models)
+
+@app.route("/save_models", methods=["POST"])
+def save_models():
+    data = request.json
+    keyword = data.get("keyword", "").strip()
+    selected_models = data.get("models", None)
+
+    if not selected_models:
+        return jsonify({"message": "No models selected!"}), 400
+
+    save_path = os.path.join(OUTPUT_DIR, keyword)
+    os.makedirs(save_path, exist_ok=True)
+
+    metadata = []
+
+    for model in selected_models:
+        source_path = os.path.join(DATASET_ROOT, model["path"].replace("/serve_model/", "").lstrip("/"))
+        filename = os.path.basename(model["path"])
+        dest_path = os.path.join(save_path, filename)
+
+        try:
+            shutil.copy2(source_path, dest_path)
+            metadata.append({
+                "path": dest_path,
+                "caption": model["caption"],
+                "sha256": model["sha256"]
+            })
+        except Exception as e:
+            print(f"Failed to copy {source_path}: {e}")
+
+    metadata_file = os.path.join(save_path, "metadata.json")
+    with open(metadata_file, "w") as f:
+        json.dump(metadata, f, indent=4)
+
+    return jsonify({"message": f"Saved {len(selected_models)} models to {save_path}!"})
 
 if __name__ == "__main__":
     app.run(debug=True)
