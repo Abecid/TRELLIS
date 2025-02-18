@@ -102,6 +102,7 @@ def save_models():
             shutil.copy2(source_path, dest_path)
             metadata.append({
                 "path": dest_path,
+                "filename": filename,
                 "caption": model["caption"],
                 "sha256": model["sha256"]
             })

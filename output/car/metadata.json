@@ -1,0 +1,17 @@
+[
+    {
+        "path": "./output/car/d9a46a3a104344c0ab144d35cc7c0883.glb",
+        "caption": "[\"A rusted, mid-20th-century classic sedan with heavy wear, broken or missing lights, shattered windows, deflated tires, a long curved hood, a small trunk, and a roof with holes. No visible insignia or internal components.\", \"Rusted, mid-20th-century sedan with broken lights, shattered windows and deflated tires.\", \"Worn, mid-century sedan with broken lights and deflated tires.\", \"An old rusty car with cracked windows and deflated tires.\", \"Dilapidated mid-20th-century sedan with broken features.\", \"Rusted sedan with shattered windows and broken lights.\", \"Worn out, rusty classic sedan.\", \"Mid-20th century rundown sedan.\", \"Vintage worn-out sedan.\", \"Deteriorated old sedan.\", \"Old rusty car.\"]",
+        "sha256": "0f2b73d6db7a05e2db90d69c1ef3426a7aa77c19a726f87345377e94c964b9c6"
+    },
+    {
+        "path": "./output/car/25f5b273daa646d38c811c7f2ebe15a8.glb",
+        "caption": "[",
+        "sha256": "0fb1dddabc408f15c97dc40f95ca6739b98ca718d7bf7368d517686d1f5b6f13"
+    },
+    {
+        "path": "./output/car/064a26e5580e481a8182b55f0a1ca167.glb",
+        "caption": "[",
+        "sha256": "0fb2cdd19ac8b85c30ce181a9ce3d1ecce978c36e974ac3caa0c952580085170"
+    }
+]
