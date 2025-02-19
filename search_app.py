@@ -88,7 +88,15 @@ def save_models():
     if not selected_models:
         return jsonify({"message": "No models selected!"}), 400
 
-    save_path = os.path.join(OUTPUT_DIR, keyword)
+    keyword_path = os.path.join(OUTPUT_DIR, keyword)
+    os.makedirs(keyword_path, exist_ok=True)
+
+    existing_batches = [
+        int(folder) for folder in os.listdir(keyword_path) if folder.isdigit()
+    ]
+    next_batch = max(existing_batches, default=0) + 1 
+
+    save_path = os.path.join(keyword_path, str(next_batch))
     os.makedirs(save_path, exist_ok=True)
 
     metadata = []

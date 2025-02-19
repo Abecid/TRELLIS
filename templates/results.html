@@ -118,7 +118,7 @@
           <h2>${modelIndex}.</h2>
           <p>Caption: ${model.caption}</p>
           <p>Path: ${model.path}</p>
-          <input type="checkbox" class="model-checkbox" data-path="${model.path}" data-caption="${model.caption}" data-sha256="${model.sha256}">
+          <input type="checkbox" class="model-checkbox" data-path="${model.path}" data-caption='${model.caption}' data-sha256="${model.sha256}">
           <canvas id="${canvasId}"></canvas>
         `;
         container.appendChild(entry);
